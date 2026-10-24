@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import time
 from dataclasses import dataclass
 from functools import lru_cache
@@ -33,6 +34,9 @@ RED = (231, 76, 60)
 
 GAUGE_START_ANGLE = 135
 GAUGE_SWEEP = 270
+
+TITLE_ENV = "MONITOR_NAME"
+DEFAULT_TITLE = "XSERVER"
 
 FONT_DIRECTORIES = (
     Path("/usr/share/fonts/truetype/dejavu"),
@@ -135,6 +139,26 @@ def _font(size: int, bold: bool) -> ImageFont.FreeTypeFont | ImageFont.ImageFont
         return ImageFont.load_default()
 
 
+def default_title() -> str:
+    value = os.environ.get(TITLE_ENV, "").strip()
+    return value or DEFAULT_TITLE
+
+
+def _fit_text(
+    draw: ImageDraw.ImageDraw,
+    text: str,
+    font: ImageFont.FreeTypeFont | ImageFont.ImageFont,
+    max_width: float,
+) -> str:
+    if draw.textlength(text, font=font) <= max_width:
+        return text
+    ellipsis = "…"
+    trimmed = text
+    while trimmed and draw.textlength(trimmed + ellipsis, font=font) > max_width:
+        trimmed = trimmed[:-1]
+    return f"{trimmed}{ellipsis}" if trimmed else ""
+
+
 def _draw_arc(
     draw: ImageDraw.ImageDraw,
     box: tuple[int, int, int, int],
@@ -159,11 +183,13 @@ class ScreenRenderer:
         *,
         width: int = WIDTH,
         height: int = HEIGHT,
+        title: str | None = None,
     ) -> None:
         if width % 2 or height < HEADER_HEIGHT + 3 * CELL_HEIGHT:
             raise ValueError(f"dimensões incompatíveis com o layout: {width}x{height}")
         self.gauges = tuple(gauges)
         self.gpu_indices = tuple(gpu_indices)
+        self.title = (title if title is not None else default_title()).strip() or DEFAULT_TITLE
         self.width = width
         self.height = height
         self._rects = self._build_layout()
@@ -264,17 +290,25 @@ class ScreenRenderer:
         image = Image.new("RGB", (WIDTH * scale, HEADER_HEIGHT * scale), BACKGROUND)
         draw = ImageDraw.Draw(image)
 
+        title_font = _font(13 * scale, True)
+        clock_font = _font(11 * scale, False)
+        clock = time.strftime("%d/%m %H:%M", time.localtime(timestamp))
+
+        left = 8 * scale
+        right = (WIDTH - 8) * scale
+        max_title = right - left - draw.textlength(clock, font=clock_font) - 12 * scale
+
         draw.text(
-            (8 * scale, 6 * scale),
-            "XSERVER",
-            font=_font(13 * scale, True),
+            (left, 6 * scale),
+            _fit_text(draw, self.title, title_font, max_title),
+            font=title_font,
             fill=TEXT,
             anchor="la",
         )
         draw.text(
-            ((WIDTH - 8) * scale, 7 * scale),
-            time.strftime("%d/%m %H:%M", time.localtime(timestamp)),
-            font=_font(11 * scale, False),
+            (right, 7 * scale),
+            clock,
+            font=clock_font,
             fill=TEXT_DIM,
             anchor="ra",
         )

@@ -1,4 +1,4 @@
-# TURZX 3.5 Monitor
+# Vitals Deck
 
 Monitor de sistema para a mini tela **TURZX / Turing Smart Screen 3.5"** (320x480, USB CDC-ACM, `1a86:5722`), sem o software proprietário do fabricante. Roda como serviço *systemd* em Linux, coleta CPU, RAM, Swap, GPUs NVIDIA e temperatura, e acumula o consumo de energia.
 
@@ -72,6 +72,21 @@ O carregamento é estrito: qualquer chave desconhecida impede a inicialização 
 | `energy` | `rapl_path` | `/sys/class/powercap/intel-rapl:0` | Domínio RAPL da CPU |
 | `logging` | `level` | `INFO` | `DEBUG`, `INFO`, `WARNING`, `ERROR` ou `CRITICAL` |
 | `logging` | `file` | `null` | Arquivo de log; `null` usa *stderr* |
+
+### Nome no cabeçalho
+
+O texto exibido no topo da tela vem da variável de ambiente `MONITOR_NAME`; sem ela, o padrão é `XSERVER`. Nomes longos são truncados com `…` para não invadir a data/hora. Para fixar o nome no serviço:
+
+```bash
+sudo systemctl edit turzx-monitor
+```
+
+```ini
+[Service]
+Environment=MONITOR_NAME=HOMELAB
+```
+
+Depois, `sudo systemctl restart turzx-monitor`.
 
 ## Energia
 

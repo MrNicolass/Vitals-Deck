@@ -1,5 +1,6 @@
 import io
 import unittest
+from unittest import mock
 
 from PIL import Image
 
@@ -9,6 +10,7 @@ from turzx_monitor.render import (
     CELL_BACKGROUND,
     CELL_HEIGHT,
     CELL_WIDTH,
+    DEFAULT_TITLE,
     GREEN,
     HEADER_HEIGHT,
     HEIGHT,
@@ -111,6 +113,29 @@ class LayoutTest(unittest.TestCase):
         rects = renderer.layout()
         self.assertEqual(list(rects)[-2:], ["gpu0", "energy"])
         self.assertEqual(rects["energy"].box, (160, HEADER_HEIGHT + CELL_HEIGHT, 319, HEADER_HEIGHT + 2 * CELL_HEIGHT - 1))
+
+
+class HeaderTest(unittest.TestCase):
+    def test_default_title(self):
+        with mock.patch.dict("os.environ", {}, clear=True):
+            self.assertEqual(ScreenRenderer().title, DEFAULT_TITLE)
+
+    def test_title_from_environment(self):
+        with mock.patch.dict("os.environ", {"MONITOR_NAME": "HOMELAB"}):
+            self.assertEqual(ScreenRenderer().title, "HOMELAB")
+
+    def test_explicit_title_wins_over_environment(self):
+        with mock.patch.dict("os.environ", {"MONITOR_NAME": "HOMELAB"}):
+            self.assertEqual(ScreenRenderer(title="NAS").title, "NAS")
+
+    def test_blank_title_falls_back_to_default(self):
+        with mock.patch.dict("os.environ", {"MONITOR_NAME": "   "}):
+            self.assertEqual(ScreenRenderer().title, DEFAULT_TITLE)
+
+    def test_long_title_is_clipped(self):
+        renderer = ScreenRenderer(title="NOME MUITO COMPRIDO QUE NAO CABE NO CABECALHO")
+        image = renderer.render_header(now=1_000_000.0)
+        self.assertEqual(image.size, (WIDTH, HEADER_HEIGHT))
 
 
 class CellTest(unittest.TestCase):
