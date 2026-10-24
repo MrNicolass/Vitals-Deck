@@ -1,0 +1,5 @@
+# TURZX 3.5" - tela serial (VID:PID 1a86:5722)
+SUBSYSTEM=="tty", ATTRS{idVendor}=="1a86", ATTRS{idProduct}=="5722", MODE="0660", GROUP="dialout", SYMLINK+="turzx-monitor"
+
+# RAPL package-0: permite ao serviço ler os contadores de energia
+SUBSYSTEM=="powercap", KERNEL=="intel-rapl:0", ACTION=="add|change", RUN+="/bin/chmod a+r /sys/class/powercap/intel-rapl:0/energy_uj"

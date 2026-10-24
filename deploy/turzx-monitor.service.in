@@ -1,0 +1,32 @@
+[Unit]
+Description=TURZX 3.5 system monitor
+After=local-fs.target
+
+[Service]
+Type=simple
+User=@SERVICE_USER@
+Group=@SERVICE_USER@
+SupplementaryGroups=dialout
+WorkingDirectory=@PROJECT_DIR@
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=@PROJECT_DIR@/.venv/bin/python -m turzx_monitor --config @PROJECT_DIR@/config.yaml
+StateDirectory=turzx-monitor
+StateDirectoryMode=0750
+Restart=on-failure
+RestartSec=5s
+TimeoutStopSec=10s
+
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictNamespaces=yes
+LockPersonality=yes
+SystemCallArchitectures=native
+
+[Install]
+WantedBy=multi-user.target

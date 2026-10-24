@@ -1,0 +1,28 @@
+display:
+  port: /dev/serial/by-id/usb-Turing_UsbMonitor_USB35INCHIPSV2-if00
+  baudrate: 115200
+  orientation: portrait
+  brightness: 0
+  full_refresh_interval: 300
+  reconnect_delay: 5
+
+monitor:
+  interval: 2.0
+  gauges:
+    - cpu
+    - ram
+    - swap
+    - gpu0
+    - gpu1
+  gpus:
+    - 0
+    - 1
+
+energy:
+  state_file: /var/lib/turzx-monitor/energy.json
+  sample_interval: 1.0
+  rapl_path: /sys/class/powercap/intel-rapl:0
+
+logging:
+  level: INFO
+  file: null
